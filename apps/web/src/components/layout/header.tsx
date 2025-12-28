@@ -12,8 +12,10 @@ import {
   Code2,
   Command,
   Cpu,
+  Flame,
   Globe,
   GraduationCap,
+  Hash,
   Layers,
   LayoutGrid,
   LogOut,
@@ -44,51 +46,48 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-// Navigation categories with subcategories
+// Navigation categories
 const categories = [
   {
     title: 'Engineering',
     href: '/category/engineering',
     icon: Code2,
-    description: 'Software development, architecture, and best practices',
-    featured: [
+    color: 'from-blue-500 to-cyan-500',
+    description: 'Software development & architecture',
+    subcategories: [
       { title: 'Web Development', href: '/tag/webdev', icon: Globe },
       { title: 'Backend', href: '/tag/backend', icon: Layers },
-      { title: 'DevOps', href: '/tag/devops', icon: Settings },
+      { title: 'DevOps & Cloud', href: '/tag/devops', icon: Settings },
       { title: 'System Design', href: '/tag/system-design', icon: LayoutGrid },
+      { title: 'Mobile Dev', href: '/tag/mobile', icon: Cpu },
     ],
   },
   {
     title: 'AI & ML',
     href: '/category/artificial-intelligence',
     icon: Sparkles,
-    description: 'Artificial intelligence, machine learning, and data science',
-    featured: [
+    color: 'from-purple-500 to-pink-500',
+    description: 'Artificial intelligence & data science',
+    subcategories: [
       { title: 'Machine Learning', href: '/tag/ml', icon: Cpu },
       { title: 'Deep Learning', href: '/tag/deep-learning', icon: Zap },
-      { title: 'LLMs & GPT', href: '/tag/llm', icon: Sparkles },
+      { title: 'LLMs & ChatGPT', href: '/tag/llm', icon: Sparkles },
       { title: 'Computer Vision', href: '/tag/cv', icon: LayoutGrid },
+      { title: 'Data Science', href: '/tag/data-science', icon: TrendingUp },
     ],
   },
   {
     title: 'Startups',
     href: '/category/startups-venture',
     icon: Rocket,
-    description: 'Entrepreneurship, funding, and startup ecosystem',
-    featured: [
+    color: 'from-orange-500 to-red-500',
+    description: 'Entrepreneurship & venture',
+    subcategories: [
       { title: 'Fundraising', href: '/tag/fundraising', icon: TrendingUp },
-      { title: 'Growth', href: '/tag/growth', icon: TrendingUp },
+      { title: 'Growth Hacking', href: '/tag/growth', icon: Flame },
       { title: 'Product-Market Fit', href: '/tag/pmf', icon: Users },
       { title: 'Venture Capital', href: '/tag/vc', icon: Briefcase },
     ],
@@ -97,8 +96,9 @@ const categories = [
     title: 'Product',
     href: '/category/product-design',
     icon: Layers,
-    description: 'Product management, design, and user experience',
-    featured: [
+    color: 'from-green-500 to-emerald-500',
+    description: 'Product management & UX',
+    subcategories: [
       { title: 'Product Strategy', href: '/tag/product-strategy', icon: LayoutGrid },
       { title: 'UX Design', href: '/tag/ux', icon: Sparkles },
       { title: 'User Research', href: '/tag/user-research', icon: Users },
@@ -109,12 +109,13 @@ const categories = [
     title: 'Career',
     href: '/category/career-growth',
     icon: GraduationCap,
-    description: 'Professional development and career advancement',
-    featured: [
+    color: 'from-amber-500 to-yellow-500',
+    description: 'Professional development',
+    subcategories: [
       { title: 'Interviews', href: '/tag/interviews', icon: Users },
       { title: 'Leadership', href: '/tag/leadership', icon: TrendingUp },
       { title: 'Remote Work', href: '/tag/remote', icon: Globe },
-      { title: 'Salary & Comp', href: '/tag/salary', icon: Briefcase },
+      { title: 'Salary Guide', href: '/tag/salary', icon: Briefcase },
     ],
   },
 ];
@@ -128,33 +129,29 @@ const languages = [
 export function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
   const [currentLang, setCurrentLang] = React.useState(languages[0]);
   const { theme, setTheme } = useTheme();
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Mock auth state - replace with real auth
   const isAuthenticated = false;
   const user = {
     name: 'John Doe',
     email: 'john@example.com',
     avatar: null,
     karma: 1520,
-    role: 'member',
   };
 
   React.useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Keyboard shortcut for search
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        // Open search modal - TODO: implement
         console.log('Open search');
       }
     };
@@ -162,340 +159,348 @@ export function Header() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleMouseEnter = (title: string) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveCategory(title);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setActiveCategory(null), 150);
+  };
+
   return (
     <header
       className={cn(
         'sticky top-0 z-50 w-full transition-all duration-300',
-        isScrolled
-          ? 'bg-background/95 backdrop-blur-xl border-b shadow-sm'
-          : 'bg-background'
+        isScrolled ? 'bg-background/80 backdrop-blur-xl border-b' : 'bg-background'
       )}
     >
+      {/* Main Nav */}
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-                <span className="text-primary-foreground font-bold text-lg">A</span>
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent" />
+        <div className="flex h-16 items-center justify-between">
+          {/* Left: Logo */}
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:shadow-purple-500/50 transition-all group-hover:scale-105">
+                  <span className="text-white font-bold text-xl">A</span>
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-background" />
               </div>
-              <div className="hidden sm:flex flex-col">
-                <span className="font-bold text-xl tracking-tight">ABS</span>
-                <span className="text-[10px] text-muted-foreground -mt-1 font-medium">Platform</span>
+              <div className="hidden sm:block">
+                <span className="font-bold text-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  ABS
+                </span>
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
-            <NavigationMenu className="hidden lg:flex">
-              <NavigationMenuList>
+            {/* Desktop Nav */}
+            <div className="hidden lg:flex items-center">
+              <div className="flex items-center bg-muted/50 rounded-full p-1">
                 {categories.map((category) => (
-                  <NavigationMenuItem key={category.title}>
-                    <NavigationMenuTrigger className="h-9 px-3 text-sm font-medium">
-                      {category.title}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="w-[500px] p-4">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <category.icon className="h-5 w-5 text-primary" />
+                  <div
+                    key={category.title}
+                    className="relative"
+                    onMouseEnter={() => handleMouseEnter(category.title)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <Link
+                      href={category.href}
+                      className={cn(
+                        'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all',
+                        activeCategory === category.title
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      <category.icon className="h-4 w-4" />
+                      <span>{category.title}</span>
+                      <ChevronDown
+                        className={cn(
+                          'h-3 w-3 transition-transform',
+                          activeCategory === category.title && 'rotate-180'
+                        )}
+                      />
+                    </Link>
+
+                    {/* Mega Dropdown */}
+                    {activeCategory === category.title && (
+                      <div
+                        className="absolute top-full left-0 mt-2 w-72 p-3 bg-popover rounded-xl border shadow-xl animate-in fade-in-0 zoom-in-95 duration-200"
+                        onMouseEnter={() => handleMouseEnter(category.title)}
+                        onMouseLeave={handleMouseLeave}
+                      >
+                        {/* Header */}
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r opacity-90 mb-2" style={{
+                          background: `linear-gradient(135deg, var(--tw-gradient-stops))`,
+                        }}>
+                          <div className={cn('h-10 w-10 rounded-xl bg-gradient-to-br flex items-center justify-center', category.color)}>
+                            <category.icon className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                            <Link
-                              href={category.href}
-                              className="font-semibold text-base hover:text-primary transition-colors"
-                            >
-                              {category.title}
-                            </Link>
-                            <p className="text-sm text-muted-foreground mt-0.5">
-                              {category.description}
-                            </p>
+                            <h3 className="font-semibold text-sm">{category.title}</h3>
+                            <p className="text-xs text-muted-foreground">{category.description}</p>
                           </div>
                         </div>
-                        <Separator className="mb-4" />
-                        <div className="grid grid-cols-2 gap-2">
-                          {category.featured.map((item) => (
-                            <NavigationMenuLink key={item.title} asChild>
-                              <Link
-                                href={item.href}
-                                className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent transition-colors group/item"
-                              >
-                                <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center group-hover/item:bg-primary/10 transition-colors">
-                                  <item.icon className="h-4 w-4 text-muted-foreground group-hover/item:text-primary transition-colors" />
-                                </div>
-                                <span className="text-sm font-medium">{item.title}</span>
-                              </Link>
-                            </NavigationMenuLink>
+
+                        {/* Links */}
+                        <div className="space-y-1">
+                          {category.subcategories.map((sub) => (
+                            <Link
+                              key={sub.title}
+                              href={sub.href}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors group/item"
+                            >
+                              <div className="h-8 w-8 rounded-lg bg-muted group-hover/item:bg-primary/10 flex items-center justify-center transition-colors">
+                                <sub.icon className="h-4 w-4 text-muted-foreground group-hover/item:text-primary transition-colors" />
+                              </div>
+                              <span className="text-sm font-medium">{sub.title}</span>
+                            </Link>
                           ))}
                         </div>
-                        <Separator className="my-4" />
+
+                        <Separator className="my-2" />
+
                         <Link
                           href={category.href}
-                          className="flex items-center justify-center gap-2 text-sm text-primary hover:underline"
+                          className="flex items-center justify-between px-3 py-2 text-sm text-primary hover:bg-accent rounded-lg transition-colors"
                         >
-                          View all in {category.title}
-                          <ChevronDown className="h-3 w-3 rotate-[-90deg]" />
+                          <span>View all articles</span>
+                          <ChevronDown className="h-4 w-4 -rotate-90" />
                         </Link>
                       </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
+                    )}
+                  </div>
                 ))}
+              </div>
 
-                <NavigationMenuItem>
-                  <Link href="/jobs" legacyBehavior passHref>
-                    <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none">
-                      <Briefcase className="h-4 w-4 mr-1.5" />
-                      Jobs
-                      <Badge variant="success" className="ml-2 h-5 px-1.5 text-[10px]">
-                        New
-                      </Badge>
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+              {/* Jobs Link */}
+              <Link
+                href="/jobs"
+                className="ml-2 flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Briefcase className="h-4 w-4" />
+                Jobs
+                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full">
+                  HOT
+                </span>
+              </Link>
+            </div>
           </div>
 
-          {/* Right side */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          {/* Right */}
+          <div className="flex items-center gap-2">
             {/* Search */}
-            <Button
-              variant="outline"
-              className="hidden sm:flex items-center gap-2 h-9 px-3 text-muted-foreground hover:text-foreground"
-              onClick={() => console.log('Open search')}
+            <button
+              onClick={() => console.log('Search')}
+              className="hidden sm:flex items-center gap-2 h-10 px-4 bg-muted/50 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
             >
               <Search className="h-4 w-4" />
-              <span className="text-sm hidden md:inline">Search...</span>
-              <kbd className="hidden md:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">
+              <span className="text-sm">Search</span>
+              <kbd className="ml-2 flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono bg-background rounded border">
                 <Command className="h-3 w-3" />K
               </kbd>
-            </Button>
+            </button>
 
-            <Button variant="ghost" size="icon" className="sm:hidden h-9 w-9">
+            <Button variant="ghost" size="icon" className="sm:hidden rounded-full">
               <Search className="h-5 w-5" />
             </Button>
 
-            {/* Language Selector */}
+            <Separator orientation="vertical" className="h-6 hidden sm:block" />
+
+            {/* Language */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <span className="text-base">{currentLang.flag}</span>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <span className="text-lg">{currentLang.flag}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuContent align="end" className="w-40 rounded-xl">
                 <DropdownMenuLabel>Language</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {languages.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
                     onClick={() => setCurrentLang(lang)}
-                    className={cn(
-                      'cursor-pointer',
-                      currentLang.code === lang.code && 'bg-accent'
-                    )}
+                    className={cn('cursor-pointer rounded-lg', currentLang.code === lang.code && 'bg-accent')}
                   >
-                    <span className="mr-2">{lang.flag}</span>
+                    <span className="mr-2 text-lg">{lang.flag}</span>
                     {lang.name}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Theme toggle */}
+            {/* Theme */}
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9"
+              className="rounded-full"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             >
-              <Sun className="h-[18px] w-[18px] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-[18px] w-[18px] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </Button>
 
-            <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
+            <Separator orientation="vertical" className="h-6 hidden sm:block" />
 
             {isAuthenticated ? (
               <>
-                {/* Write Button */}
-                <Button variant="ghost" size="sm" asChild className="hidden sm:flex gap-2">
+                <Button
+                  asChild
+                  className="hidden sm:flex rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25"
+                >
                   <Link href="/write">
-                    <PenLine className="h-4 w-4" />
+                    <PenLine className="h-4 w-4 mr-2" />
                     Write
                   </Link>
                 </Button>
 
-                {/* Notifications */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative h-9 w-9">
-                      <Bell className="h-[18px] w-[18px]" />
-                      <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
+                    <Button variant="ghost" size="icon" className="relative rounded-full">
+                      <Bell className="h-5 w-5" />
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
                         3
                       </span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-80">
-                    <DropdownMenuLabel className="flex items-center justify-between">
+                  <DropdownMenuContent align="end" className="w-80 rounded-xl">
+                    <DropdownMenuLabel className="flex justify-between items-center">
                       Notifications
-                      <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary">
-                        Mark all read
-                      </Button>
+                      <button className="text-xs text-primary hover:underline">Mark all read</button>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <div className="p-4 text-center text-sm text-muted-foreground">
+                    <div className="p-6 text-center text-sm text-muted-foreground">
                       No new notifications
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* User menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                      <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                    <button className="relative h-10 w-10 rounded-full ring-2 ring-purple-500/20 hover:ring-purple-500/40 transition-all">
+                      <Avatar className="h-10 w-10">
                         <AvatarImage src={user.avatar || ''} alt={user.name} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                        <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white font-bold">
                           {user.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                    </Button>
+                    </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary" className="text-xs">
-                            {user.karma.toLocaleString()} karma
-                          </Badge>
-                        </div>
+                  <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{user.name}</span>
+                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                        <Badge variant="secondary" className="mt-2 w-fit">
+                          {user.karma.toLocaleString()} karma
+                        </Badge>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          Profile
-                        </Link>
+                      <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                        <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/bookmarks" className="cursor-pointer">
-                          <Bookmark className="mr-2 h-4 w-4" />
-                          Bookmarks
-                        </Link>
+                      <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                        <Link href="/bookmarks"><Bookmark className="mr-2 h-4 w-4" />Bookmarks</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/reading-list" className="cursor-pointer">
-                          <BookOpen className="mr-2 h-4 w-4" />
-                          Reading List
-                        </Link>
+                      <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                        <Link href="/reading-list"><BookOpen className="mr-2 h-4 w-4" />Reading List</Link>
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuItem asChild>
-                        <Link href="/studio" className="cursor-pointer">
-                          <PenLine className="mr-2 h-4 w-4" />
-                          Creator Studio
-                        </Link>
+                      <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                        <Link href="/studio"><PenLine className="mr-2 h-4 w-4" />Creator Studio</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/settings" className="cursor-pointer">
-                          <Settings className="mr-2 h-4 w-4" />
-                          Settings
-                        </Link>
+                      <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                        <Link href="/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link>
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Log out
+                    <DropdownMenuItem className="rounded-lg cursor-pointer text-red-500 focus:text-red-500">
+                      <LogOut className="mr-2 h-4 w-4" />Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+                <Button variant="ghost" size="sm" asChild className="hidden sm:flex rounded-full">
                   <Link href="/login">Sign in</Link>
                 </Button>
-                <Button size="sm" asChild className="shadow-lg shadow-primary/25">
+                <Button
+                  asChild
+                  size="sm"
+                  className="rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25 border-0"
+                >
                   <Link href="/register">
-                    <Sparkles className="h-4 w-4 mr-1.5 hidden sm:inline" />
+                    <Sparkles className="h-4 w-4 mr-1.5" />
                     Get Started
                   </Link>
                 </Button>
               </>
             )}
 
-            {/* Mobile menu button */}
+            {/* Mobile Menu */}
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden h-9 w-9"
+              className="lg:hidden rounded-full"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile Nav */}
         {isMobileMenuOpen && (
           <div className="lg:hidden py-4 border-t animate-in slide-in-from-top-2 duration-200">
-            <div className="flex flex-col space-y-1">
+            <div className="space-y-2">
               {categories.map((category) => (
                 <Link
                   key={category.title}
                   href={category.href}
-                  className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-                    <category.icon className="h-4 w-4" />
+                  <div className={cn('h-10 w-10 rounded-xl bg-gradient-to-br flex items-center justify-center', category.color)}>
+                    <category.icon className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <div className="font-medium text-foreground">{category.title}</div>
-                    <div className="text-xs text-muted-foreground line-clamp-1">
-                      {category.description}
-                    </div>
+                    <div className="font-medium">{category.title}</div>
+                    <div className="text-xs text-muted-foreground">{category.description}</div>
                   </div>
                 </Link>
               ))}
 
               <Link
                 href="/jobs"
-                className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-                  <Briefcase className="h-4 w-4" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                  <Briefcase className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground">Jobs</span>
-                  <Badge variant="success" className="h-5 px-1.5 text-[10px]">
-                    New
-                  </Badge>
+                  <span className="font-medium">Jobs</span>
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-full">HOT</span>
                 </div>
               </Link>
 
-              <Separator className="my-3" />
+              <Separator className="my-4" />
 
               {!isAuthenticated && (
-                <div className="flex flex-col gap-2 px-3">
-                  <Button variant="outline" asChild className="w-full justify-center">
+                <div className="flex flex-col gap-2">
+                  <Button variant="outline" asChild className="w-full rounded-full">
                     <Link href="/login">Sign in</Link>
                   </Button>
-                  <Button asChild className="w-full justify-center">
+                  <Button asChild className="w-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600">
                     <Link href="/register">
-                      <Sparkles className="h-4 w-4 mr-1.5" />
+                      <Sparkles className="h-4 w-4 mr-2" />
                       Get Started
                     </Link>
                   </Button>
