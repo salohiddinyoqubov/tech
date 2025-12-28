@@ -15,17 +15,14 @@ const nextConfig = {
         hostname: 'abs-assets.s3.amazonaws.com',
       },
       {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
       },
     ],
-  },
-
-  // Internationalization
-  i18n: {
-    locales: ['en', 'uz', 'ru', 'tr', 'tj', 'kk', 'ky'],
-    defaultLocale: 'en',
-    localeDetection: true,
   },
 
   // Environment variables
