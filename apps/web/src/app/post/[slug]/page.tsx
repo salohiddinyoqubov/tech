@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import { Header } from '@/components/layout/header';
+import { PostContent } from '@/components/post/post-content';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -545,8 +546,8 @@ export default async function PostPage({ params }: PageProps) {
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-12">
               {/* Main Content */}
-              <article className="prose prose-lg dark:prose-invert max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: formatContent(post.content) }} />
+              <article>
+                <PostContent content={post.content} />
               </article>
 
               {/* Sidebar - Sticky Actions */}
@@ -689,29 +690,3 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-// Helper function to format markdown-like content to HTML
-function formatContent(content: string): string {
-  return content
-    // Headers
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    // Bold
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Code blocks
-    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Blockquotes
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-    // Lists
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
-    // Paragraphs
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/^(.+)$/gm, (match) => {
-      if (match.startsWith('<')) return match;
-      return match;
-    });
-}
