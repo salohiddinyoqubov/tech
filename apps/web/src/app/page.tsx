@@ -352,7 +352,7 @@ export default function HomePage() {
                     {topAuthors.map((author) => (
                       <Link
                         key={author.username}
-                        href={`/@${author.username}`}
+                        href={`/user/${author.username}`}
                         className="flex items-center gap-3 group"
                       >
                         <Avatar className="h-11 w-11" status={author.status}>

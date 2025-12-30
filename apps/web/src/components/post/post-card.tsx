@@ -47,7 +47,7 @@ export function PostCard({ post, variant = 'default' }: PostCardProps) {
       <article className="group flex gap-4 py-4 border-b last:border-0">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <Link href={`/@${post.author.username}`} className="flex items-center gap-2">
+            <Link href={`/user/${post.author.username}`} className="flex items-center gap-2">
               <Avatar className="h-6 w-6" status={post.author.status}>
                 <AvatarImage src={post.author.avatarUrl} alt={post.author.fullName} />
                 <AvatarFallback className="text-xs">{getInitials(post.author.fullName)}</AvatarFallback>
@@ -117,7 +117,7 @@ export function PostCard({ post, variant = 'default' }: PostCardProps) {
           <p className="text-white/80 line-clamp-2 mb-4">{post.excerpt}</p>
 
           <div className="flex items-center justify-between">
-            <Link href={`/@${post.author.username}`} className="flex items-center gap-3">
+            <Link href={`/user/${post.author.username}`} className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border-2 border-white" status={post.author.status}>
                 <AvatarImage src={post.author.avatarUrl} alt={post.author.fullName} />
                 <AvatarFallback>{getInitials(post.author.fullName)}</AvatarFallback>
@@ -151,7 +151,7 @@ export function PostCard({ post, variant = 'default' }: PostCardProps) {
 
       <div className="p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Link href={`/@${post.author.username}`} className="flex items-center gap-2">
+          <Link href={`/user/${post.author.username}`} className="flex items-center gap-2">
             <Avatar className="h-8 w-8" status={post.author.status}>
               <AvatarImage src={post.author.avatarUrl} alt={post.author.fullName} />
               <AvatarFallback className="text-xs">{getInitials(post.author.fullName)}</AvatarFallback>

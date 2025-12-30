@@ -417,7 +417,7 @@ export default async function TagPage({ params }: PageProps) {
                     {topContributors.map((contributor, index) => (
                       <Link
                         key={contributor.username}
-                        href={`/@${contributor.username}`}
+                        href={`/user/${contributor.username}`}
                         className="flex items-center gap-3 group"
                       >
                         <span className="text-lg font-bold text-muted-foreground w-6">

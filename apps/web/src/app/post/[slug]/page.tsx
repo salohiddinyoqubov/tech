@@ -483,7 +483,7 @@ export default async function PostPage({ params }: PageProps) {
               {/* Author & Meta */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
-                  <Link href={`/@${post.author.username}`}>
+                  <Link href={`/user/${post.author.username}`}>
                     <Avatar className="h-12 w-12 ring-2 ring-primary/20">
                       <AvatarImage src={post.author.avatar || ''} alt={post.author.name} />
                       <AvatarFallback className="bg-primary/10 text-primary font-medium">
@@ -493,7 +493,7 @@ export default async function PostPage({ params }: PageProps) {
                   </Link>
                   <div>
                     <Link
-                      href={`/@${post.author.username}`}
+                      href={`/user/${post.author.username}`}
                       className="font-semibold hover:text-primary transition-colors"
                     >
                       {post.author.name}
@@ -606,7 +606,7 @@ export default async function PostPage({ params }: PageProps) {
             {/* Author Card */}
             <div className="mt-16 p-6 rounded-xl border bg-card">
               <div className="flex flex-col sm:flex-row gap-6">
-                <Link href={`/@${post.author.username}`}>
+                <Link href={`/user/${post.author.username}`}>
                   <Avatar className="h-20 w-20 ring-4 ring-primary/20">
                     <AvatarImage src={post.author.avatar || ''} alt={post.author.name} />
                     <AvatarFallback className="bg-primary/10 text-primary text-2xl font-medium">
@@ -618,7 +618,7 @@ export default async function PostPage({ params }: PageProps) {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <Link
-                        href={`/@${post.author.username}`}
+                        href={`/user/${post.author.username}`}
                         className="text-xl font-bold hover:text-primary transition-colors"
                       >
                         {post.author.name}

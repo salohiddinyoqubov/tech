@@ -443,7 +443,7 @@ export default async function CategoryPage({ params }: PageProps) {
                     {topWriters.map((writer) => (
                       <Link
                         key={writer.username}
-                        href={`/@${writer.username}`}
+                        href={`/user/${writer.username}`}
                         className="flex items-center gap-3 group"
                       >
                         <Avatar className="h-11 w-11">
