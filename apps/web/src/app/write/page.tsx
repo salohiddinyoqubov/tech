@@ -1,12 +1,12 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Bold,
-  ChevronDown,
   Code,
   Eye,
   Heading1,
@@ -23,7 +23,6 @@ import {
   Send,
   Settings,
   Sparkles,
-  Type,
   Underline,
   X,
 } from 'lucide-react';
@@ -56,7 +55,7 @@ const popularTags = [
   'webdev', 'devops', 'ml', 'golang', 'rust', 'typescript',
 ];
 
-export default function WritePage() {
+function WritePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTag = searchParams.get('tag');
@@ -543,5 +542,17 @@ export default function WritePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function WritePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading editor...</div>
+      </div>
+    }>
+      <WritePageContent />
+    </Suspense>
   );
 }
